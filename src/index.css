@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --color-forest: #1B4332;
+  --color-forest-dark: #081C15;
+  --color-forest-medium: #2D6A4F;
+  --color-forest-light: #40916C;
+  --color-forest-accent: #52B788;
+  --color-forest-soft: #95D5B2;
+  --color-forest-subtle: #D8F3DC;
+  --color-app-bg: #F8F9F8;
+}

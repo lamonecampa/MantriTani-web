@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Basic user profile information",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Diagnosis": {
+      "title": "Diagnosis Result",
+      "description": "Result of an AI diagnosis session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "userDescription": { "type": "string" },
+        "aiResponse": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "aiResponse", "createdAt"]
+    },
+    "TaniCalculation": {
+      "title": "Farmer Calculation",
+      "description": "Economic calculation for a farming session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "commodity": { "type": "string" },
+        "area": { "type": "number" },
+        "laborCost": { "type": "number" },
+        "inputCost": { "type": "number" },
+        "expectedPrice": { "type": "number" },
+        "expectedYield": { "type": "number" },
+        "calculatedProfit": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "commodity", "area", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document"
+    },
+    "/diagnoses/{diagnosisId}": {
+      "schema": "Diagnosis",
+      "description": "Collection of plant diagnoses"
+    },
+    "/calculations/{calcId}": {
+      "schema": "TaniCalculation",
+      "description": "Collection of economic calculations"
+    }
+  }
+}

@@ -1,0 +1,96 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    // --- Entity Validations ---
+
+    function isValidUser(data) {
+      return data.email is string && data.email.size() <= 256 &&
+             data.createdAt == request.time &&
+             data.keys().hasAll(['email', 'createdAt']) &&
+             data.keys().size() <= 10;
+    }
+
+    function isValidDiagnosis(data) {
+      return data.userId == request.auth.uid &&
+             data.aiResponse is string && data.aiResponse.size() <= 10000 &&
+             data.createdAt == request.time &&
+             (data.status in ['pending', 'completed', 'archived']) &&
+             data.keys().hasAll(['userId', 'aiResponse', 'createdAt', 'status']);
+    }
+
+    function isValidCalculation(data) {
+      return data.userId == request.auth.uid &&
+             data.commodity is string && data.commodity.size() <= 100 &&
+             data.area is number && data.area > 0 &&
+             data.createdAt == request.time &&
+             data.keys().hasAll(['userId', 'commodity', 'area', 'createdAt']);
+    }
+
+    // --- Collection Matches ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().email == existing().email &&
+                    incoming().createdAt == existing().createdAt;
+    }
+
+    match /diagnoses/{diagId} {
+      allow get: if isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isVerified() && isValidId(diagId) && isValidDiagnosis(incoming());
+      allow update: if isOwner(existing().userId) && 
+                    existing().status != 'archived' &&
+                    isValidDiagnosis(incoming()) &&
+                    incoming().userId == existing().userId &&
+                    incoming().createdAt == existing().createdAt &&
+                    (incoming().status == 'archived' && incoming().diff(existing()).affectedKeys().hasOnly(['status']));
+      allow delete: if isOwner(existing().userId) && existing().status != 'archived';
+    }
+
+    match /calculations/{calcId} {
+      allow get: if isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isVerified() && isValidId(calcId) && isValidCalculation(incoming());
+      allow update: if isOwner(existing().userId) && 
+                    isValidCalculation(incoming()) &&
+                    incoming().userId == existing().userId &&
+                    incoming().createdAt == existing().createdAt;
+      allow delete: if isOwner(existing().userId);
+    }
+  }
+}

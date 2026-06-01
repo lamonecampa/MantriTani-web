@@ -1,0 +1,6 @@
+{
+  "name": "MantriTani",
+  "description": "Asisten medis pertanian terpercaya untuk diagnosa penyakit tanaman dan panduan pengendalian hama.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
